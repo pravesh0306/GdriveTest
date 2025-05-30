@@ -7,6 +7,13 @@ function App() {
   const [uploaded, setUploaded] = useState<{ name: string; id: string }[]>([]);
 
   useEffect(() => {
+    // Debug logging
+    console.log('Environment check:', {
+      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      window: typeof window !== 'undefined',
+      hasToken: !!token
+    });
+
     // Test mode: bypass Google OAuth for automation
     const testMode = typeof window !== 'undefined' && window.location.search.includes('test=true');
     if (testMode) {

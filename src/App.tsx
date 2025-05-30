@@ -12,7 +12,9 @@ function App() {
       clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       window: typeof window !== 'undefined',
       hasToken: !!token,
-      googleLoaded: typeof (window as any).google !== 'undefined'
+      googleLoaded: typeof (window as any).google !== 'undefined',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      currentOrigin: typeof window !== 'undefined' ? window.location.origin : 'unknown'
     });
 
     // Test mode: bypass Google OAuth for automation
@@ -28,7 +30,13 @@ function App() {
       import.meta.env.VITE_GOOGLE_CLIENT_ID &&
       !token
     ) {
+      let retryCount = 0;
+      const maxRetries = 10;
+      
       const initGoogleAuth = () => {
+        retryCount++;
+        console.log(`Attempting Google OAuth initialization (attempt ${retryCount}/${maxRetries})`);
+        
         const g = (window as any).google;
         if (
           g &&
@@ -37,17 +45,37 @@ function App() {
           typeof g.accounts.oauth2.initTokenClient === 'function'
         ) {
           console.log('Initializing Google OAuth...');
-          g.accounts.oauth2.initTokenClient({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            scope: 'https://www.googleapis.com/auth/drive.file',
-            callback: (res: any) => {
-              console.log('OAuth response:', res);
-              if (res?.access_token) setToken(res.access_token);
+          try {
+            const tokenClient = g.accounts.oauth2.initTokenClient({
+              client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+              scope: 'https://www.googleapis.com/auth/drive.file',
+              callback: (res: any) => {
+                console.log('OAuth response:', res);
+                if (res?.access_token) {
+                  console.log('Successfully received access token');
+                  setToken(res.access_token);
+                } else if (res?.error) {
+                  console.error('OAuth error:', res.error, res.error_description);
+                }
+              },
+              error_callback: (error: any) => {
+                console.error('OAuth error callback:', error);
+              }
+            });
+            
+            if (tokenClient && typeof tokenClient.requestAccessToken === 'function') {
+              tokenClient.requestAccessToken();
+            } else {
+              console.error('Token client not properly initialized');
             }
-          }).requestAccessToken();
-        } else {
-          console.error('Google API not ready, retrying in 1 second...');
+          } catch (error) {
+            console.error('Error initializing Google OAuth:', error);
+          }
+        } else if (retryCount < maxRetries) {
+          console.log(`Google API not ready, retrying in 1 second... (${retryCount}/${maxRetries})`);
           setTimeout(initGoogleAuth, 1000);
+        } else {
+          console.error('Google API failed to load after maximum retries');
         }
       };
 

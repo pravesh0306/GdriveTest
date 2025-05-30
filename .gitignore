@@ -27,6 +27,8 @@ coverage/
 
 # Misc
 .env
+# Do NOT ignore .env.example
+!.env.example
 .env.*
 *.local
 

@@ -11,7 +11,8 @@ function App() {
     console.log('Environment check:', {
       clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       window: typeof window !== 'undefined',
-      hasToken: !!token
+      hasToken: !!token,
+      googleLoaded: typeof (window as any).google !== 'undefined'
     });
 
     // Test mode: bypass Google OAuth for automation
@@ -20,31 +21,38 @@ function App() {
       setToken('TEST_MODE_TOKEN');
       return;
     }
+    
     // Only run Google OAuth logic if running in browser and env var is available
     if (
       typeof window !== 'undefined' &&
       import.meta.env.VITE_GOOGLE_CLIENT_ID &&
       !token
     ) {
-      // @ts-ignore
-      const g = (window as any).google;
-      if (
-        g &&
-        g.accounts &&
-        g.accounts.oauth2 &&
-        typeof g.accounts.oauth2.initTokenClient === 'function'
-      ) {
-        g.accounts.oauth2.initTokenClient({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/drive',
-          prompt: '',
-          callback: (res: any) => {
-            if (res?.access_token) setToken(res.access_token);
-          }
-        }).requestAccessToken();
-      } else {
-        alert('Google API script not loaded. Please check your public/index.html and internet connection.');
-      }
+      const initGoogleAuth = () => {
+        const g = (window as any).google;
+        if (
+          g &&
+          g.accounts &&
+          g.accounts.oauth2 &&
+          typeof g.accounts.oauth2.initTokenClient === 'function'
+        ) {
+          console.log('Initializing Google OAuth...');
+          g.accounts.oauth2.initTokenClient({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: (res: any) => {
+              console.log('OAuth response:', res);
+              if (res?.access_token) setToken(res.access_token);
+            }
+          }).requestAccessToken();
+        } else {
+          console.error('Google API not ready, retrying in 1 second...');
+          setTimeout(initGoogleAuth, 1000);
+        }
+      };
+
+      // Wait a bit for the Google script to load, then try to initialize
+      setTimeout(initGoogleAuth, 500);
     }
   }, [token]);
 

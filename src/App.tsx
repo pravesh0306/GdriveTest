@@ -16,9 +16,7 @@ function App() {
     // Only run Google OAuth logic if running in browser and env var is available
     if (
       typeof window !== 'undefined' &&
-      typeof process !== 'undefined' &&
-      process.env &&
-      process.env.VITE_GOOGLE_CLIENT_ID &&
+      import.meta.env.VITE_GOOGLE_CLIENT_ID &&
       !token
     ) {
       // @ts-ignore
@@ -30,7 +28,7 @@ function App() {
         typeof g.accounts.oauth2.initTokenClient === 'function'
       ) {
         g.accounts.oauth2.initTokenClient({
-          client_id: process.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           scope: 'https://www.googleapis.com/auth/drive',
           prompt: '',
           callback: (res: any) => {

@@ -22,9 +22,14 @@ function App() {
       !token
     ) {
       // @ts-ignore
-      if (window.google && window.google.accounts && window.google.accounts.oauth2) {
-        window.google.accounts.oauth2.initTokenClient({
-          // @ts-ignore
+      const g = (window as any).google;
+      if (
+        g &&
+        g.accounts &&
+        g.accounts.oauth2 &&
+        typeof g.accounts.oauth2.initTokenClient === 'function'
+      ) {
+        g.accounts.oauth2.initTokenClient({
           client_id: process.env.VITE_GOOGLE_CLIENT_ID,
           scope: 'https://www.googleapis.com/auth/drive',
           prompt: '',
@@ -32,6 +37,8 @@ function App() {
             if (res?.access_token) setToken(res.access_token);
           }
         }).requestAccessToken();
+      } else {
+        alert('Google API script not loaded. Please check your public/index.html and internet connection.');
       }
     }
   }, [token]);

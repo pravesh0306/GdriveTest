@@ -50,6 +50,24 @@ function App() {
         body: form
       });
       const data = await res.json();
+      console.log('Upload response:', data);
+      // Set file permission to anyone with the link can view
+      const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          role: 'reader',
+          type: 'anyone'
+        })
+      });
+      const permData = await permRes.json();
+      console.log('Permission response:', permData);
+      if (!permRes.ok) {
+        alert(`Failed to set sharing permissions: ${permData.error?.message || permRes.status}`);
+      }
       alert(`Uploaded: ${data.name}`);
       setUploaded(prev => [...prev, { name: data.name, id: data.id }]);
     }

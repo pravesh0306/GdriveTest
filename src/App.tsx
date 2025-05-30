@@ -26,7 +26,7 @@ function App() {
         window.google.accounts.oauth2.initTokenClient({
           // @ts-ignore
           client_id: process.env.VITE_GOOGLE_CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/drive.file',
+          scope: 'https://www.googleapis.com/auth/drive',
           prompt: '',
           callback: (res: any) => {
             if (res?.access_token) setToken(res.access_token);

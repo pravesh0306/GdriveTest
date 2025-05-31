@@ -6,8 +6,7 @@ import {
   Settings, 
   LogOut,
   User,
-  X,
-  TestTube
+  X
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -25,7 +24,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/orders', icon: <PackageSearch className="w-5 h-5" />, label: 'Orders Dashboard' },
     { path: '/new-order', icon: <PlusCircle className="w-5 h-5" />, label: 'New Order' },
     { path: '/admin', icon: <Settings className="w-5 h-5" />, label: 'Admin Dashboard' },
-    { path: '/testing', icon: <TestTube className="w-5 h-5" />, label: 'Google Drive Testing' },
   ];
 
   return (

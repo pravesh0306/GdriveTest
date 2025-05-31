@@ -32,6 +32,13 @@ export interface Order {
   notes?: string;
   fabric?: string;
   color?: string;
+  attachments?: Array<{
+    name: string;
+    size: number | string;
+    type: string;
+    driveUrl?: string;
+    uploadedAt?: string;
+  }>;
 }
 
 // For export utilities compatibility - flattened structure

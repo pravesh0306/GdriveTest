@@ -7,6 +7,7 @@ import Dashboard from './components/layout/Dashboard';
 import Orders from './pages/Orders';
 import NewOrder from './pages/NewOrder';
 import AdminDashboard from './pages/AdminDashboard';
+import TestingPage from './pages/TestingPage';
 import { StorageAlertBar } from './components/ui/StorageAlertBar';
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/new-order" element={<NewOrder />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/testing" element={<TestingPage />} />
             <Route path="*" element={<Navigate to="/orders" replace />} />
           </Routes>
         </main>

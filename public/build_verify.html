@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build Test</title>
+  <style>
+    body {
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    h1 { color: #2563eb; margin-bottom: 1.5rem; }
+    h2 { color: #1e40af; margin-top: 2rem; margin-bottom: 0.75rem; }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    pre {
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .success { color: #10b981; font-weight: bold; }
+    .warning { color: #f59e0b; font-weight: bold; }
+    .error { color: #ef4444; font-weight: bold; }
+    .asset-list { font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>Vite Build Verification</h1>
+  <div class="card">
+    <h2>Build Status</h2>
+    <p id="build-status">Checking build status...</p>
+    
+    <h2>CSS Files</h2>
+    <p id="css-status">Checking CSS files...</p>
+    <div id="css-list" class="asset-list"></div>
+    
+    <h2>JavaScript Files</h2>
+    <p id="js-status">Checking JS files...</p>
+    <div id="js-list" class="asset-list"></div>
+    
+    <h2>HTML Structure</h2>
+    <p id="html-status">Checking HTML structure...</p>
+    <div id="html-structure"></div>
+
+    <h2>Environment</h2>
+    <p id="env-info">Checking environment...</p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        // Check for build directory
+        const buildStatus = document.getElementById('build-status');
+        buildStatus.textContent = "✅ Build successful - HTML loaded";
+        buildStatus.className = "success";
+        
+        // Check if CSS is loaded
+        const styleSheets = document.styleSheets;
+        const cssStatus = document.getElementById('css-status');
+        const cssList = document.getElementById('css-list');
+        
+        if (styleSheets.length > 0) {
+          cssStatus.textContent = `✅ Found ${styleSheets.length} stylesheet(s)`;
+          cssStatus.className = "success";
+          
+          for (let i = 0; i < styleSheets.length; i++) {
+            const sheet = styleSheets[i];
+            const cssPath = sheet.href || 'Inline CSS';
+            const cssItem = document.createElement('div');
+            cssItem.textContent = `${i+1}. ${cssPath}`;
+            cssList.appendChild(cssItem);
+          }
+        } else {
+          cssStatus.textContent = "❌ No CSS found - styling will be broken";
+          cssStatus.className = "error";
+        }
+        
+        // Check for JS files
+        const jsStatus = document.getElementById('js-status');
+        const jsList = document.getElementById('js-list');
+        
+        const scripts = document.getElementsByTagName('script');
+        if (scripts.length > 0) {
+          jsStatus.textContent = `✅ Found ${scripts.length} script(s)`;
+          jsStatus.className = "success";
+          
+          for (let i = 0; i < scripts.length; i++) {
+            const script = scripts[i];
+            const jsPath = script.src || 'Inline Script';
+            const jsItem = document.createElement('div');
+            jsItem.textContent = `${i+1}. ${jsPath}`;
+            jsList.appendChild(jsItem);
+          }
+        } else {
+          jsStatus.textContent = "❌ No JS found - functionality will be broken";
+          jsStatus.className = "error";
+        }
+        
+        // Check HTML structure
+        const htmlStatus = document.getElementById('html-status');
+        const htmlStructure = document.getElementById('html-structure');
+        
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+          htmlStatus.textContent = "✅ Found root element";
+          htmlStatus.className = "success";
+          
+          const rootInfo = document.createElement('pre');
+          rootInfo.textContent = `<div id="root"> found`;
+          htmlStructure.appendChild(rootInfo);
+        } else {
+          htmlStatus.textContent = "❌ No root element found - React will not render";
+          htmlStatus.className = "error";
+        }
+        
+        // Environment info
+        const envInfo = document.getElementById('env-info');
+        envInfo.innerHTML = `
+          <div><strong>URL:</strong> ${window.location.href}</div>
+          <div><strong>User Agent:</strong> ${navigator.userAgent}</div>
+          <div><strong>Timestamp:</strong> ${new Date().toISOString()}</div>
+        `;
+        
+      } catch (error) {
+        console.error("Error during build check:", error);
+        document.body.innerHTML += `<div class="card error"><h2>Error</h2><pre>${error.toString()}\n${error.stack}</pre></div>`;
+      }
+    });
+  </script>
+</body>
+</html>

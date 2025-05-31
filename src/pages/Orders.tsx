@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Download, Plus, Eye, Edit, Trash2, FileText, Calendar, User, Package, MapPin, DollarSign } from 'lucide-react';
+import { Search, Filter, Download, Plus, Eye, Edit, Trash2, FileText, Calendar, User, Package, MapPin, DollarSign, Paperclip, ExternalLink } from 'lucide-react';
 import Button from '../components/ui/Button';
 import FloatingActionButton from '../components/ui/FloatingActionButton';
+import AttachmentModal from '../components/ui/AttachmentModal';
 import { exportToCSV, exportToExcel, exportToPDF } from '../utils/exportUtils';
 import { Order } from '../types/order';
 
@@ -11,9 +12,12 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [selectedOrderForAttachments, setSelectedOrderForAttachments] = useState<Order | null>(null);
 
-  // Sample data - in real app, this would come from an API
+  // Load orders from localStorage and merge with sample data
   useEffect(() => {
+    const storedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+    
     const sampleOrders: Order[] = [
       {
         id: 'ORD-001',
@@ -79,7 +83,13 @@ export default function Orders() {
         color: 'White'
       }
     ];
-    setOrders(sampleOrders);
+    
+    // Merge stored orders with sample orders, prioritizing stored orders
+    const mergedOrders = [...storedOrders, ...sampleOrders.filter(sample => 
+      !storedOrders.some((stored: Order) => stored.id === sample.id)
+    )];
+    
+    setOrders(mergedOrders);
   }, []);
 
   const filteredOrders = orders.filter(order => {
@@ -245,6 +255,7 @@ export default function Orders() {
                 <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Order ID</th>
                 <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Customer</th>
                 <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Garment</th>
+                <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Attachments</th>
                 <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Order Date</th>
                 <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Delivery Date</th>
                 <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Status</th>
@@ -292,6 +303,47 @@ export default function Orders() {
                     {order.color && (
                       <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                         {order.color}
+                      </div>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    {order.attachments && order.attachments.length > 0 ? (
+                      <div 
+                        className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600 p-2 rounded-lg transition-colors"
+                        onClick={() => setSelectedOrderForAttachments(order)}
+                        title="Click to view all attachments"
+                      >
+                        <Paperclip className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-900 dark:text-white">
+                          {order.attachments.length} file{order.attachments.length > 1 ? 's' : ''}
+                        </span>
+                        <div className="flex gap-1">
+                          {order.attachments.slice(0, 3).map((attachment, index) => (
+                            <button
+                              key={index}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (attachment.driveUrl) {
+                                  window.open(attachment.driveUrl, '_blank');
+                                }
+                              }}
+                              className="p-1 hover:bg-slate-200 dark:hover:bg-slate-500 rounded text-blue-600 dark:text-blue-400"
+                              title={`View ${attachment.name}`}
+                              disabled={!attachment.driveUrl}
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </button>
+                          ))}
+                          {order.attachments.length > 3 && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
+                              +{order.attachments.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-slate-400">
+                        No attachments
                       </div>
                     )}
                   </td>
@@ -370,6 +422,19 @@ export default function Orders() {
         onClick={() => window.location.href = '/new-order'}
         icon={<Plus className="h-6 w-6" />}
       />
+
+      {/* Attachment Modal */}
+      {selectedOrderForAttachments && (
+        <AttachmentModal
+          isOpen={true}
+          onClose={() => setSelectedOrderForAttachments(null)}
+          attachments={selectedOrderForAttachments.attachments || []}
+          orderInfo={{
+            id: selectedOrderForAttachments.id,
+            customerName: selectedOrderForAttachments.customerName
+          }}
+        />
+      )}
     </div>
   );
 }

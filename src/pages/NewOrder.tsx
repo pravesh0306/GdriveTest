@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Save, ArrowLeft, User, Package, Ruler, Calendar, DollarSign, FileText, MapPin, Phone, Mail, Palette } from 'lucide-react';
+import { Save, ArrowLeft, User, Package, Ruler, Calendar, DollarSign, FileText, MapPin, Phone, Mail, Palette, Upload } from 'lucide-react';
 import Button from '../components/ui/Button';
+import DragDropUpload from '../components/ui/DragDropUpload';
+import AttachmentGrid from '../components/ui/AttachmentGrid';
 
 interface MeasurementField {
   key: string;
@@ -75,6 +77,14 @@ export default function NewOrder() {
     
     // Additional Information
     notes: '',
+    
+    // Uploaded Files
+    attachments: [] as Array<{
+      name: string;
+      size: string;
+      type: string;
+      file: File;
+    }>,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -102,6 +112,37 @@ export default function NewOrder() {
         ...prev.measurements,
         [key]: numValue
       }
+    }));
+  };
+
+  const handleFileUpload = (files: File[]) => {
+    const newAttachments = files.map(file => ({
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type || 'application/octet-stream',
+      file: file
+    }));
+    
+    setFormData(prev => ({
+      ...prev,
+      attachments: [...prev.attachments, ...newAttachments]
+    }));
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const removeAttachment = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index)
     }));
   };
 
@@ -150,6 +191,13 @@ export default function NewOrder() {
       ...formData,
       amount: Number(formData.amount),
       status: 'pending' as const,
+      attachments: formData.attachments.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        driveUrl: (file as any).driveUrl || null,
+        uploadedAt: new Date().toISOString()
+      }))
     };
 
     // In a real app, this would save to a database
@@ -452,6 +500,32 @@ export default function NewOrder() {
               rows={4}
               className="w-full px-4 py-3 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
               placeholder="Add any special instructions, design preferences, or additional notes..."
+            />
+          </div>
+        </div>
+
+        {/* File Attachments */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+              <Upload className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              Design References & Attachments
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            <DragDropUpload
+              onUpload={handleFileUpload}
+              maxSize={10}
+              acceptedTypes={['image/*', 'application/pdf', '.doc', '.docx']}
+            />
+
+            {/* Display uploaded files */}
+            <AttachmentGrid
+              attachments={formData.attachments}
+              onRemove={removeAttachment}
             />
           </div>
         </div>

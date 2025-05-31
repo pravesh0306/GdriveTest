@@ -14,6 +14,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    cssCodeSplit: false, // Force CSS to be in one file
     rollupOptions: {
       output: {
         manualChunks: {
@@ -23,5 +24,5 @@ export default defineConfig({
       }
     }
   },
-  base: './'
+  base: '/'
 });
